@@ -41,6 +41,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -58,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -231,13 +233,15 @@ private fun EpisodeRow(
     var menuOpen by remember { mutableStateOf(false) }
     val isCurrent = nowPlaying.episodeId == episode.id
     val showPause = isCurrent && nowPlaying.isPlaying
+    // Episodes without a local file are drawn "hollow": lighter text and an outlined play button.
+    val hollow = episode.downloadState != DownloadState.DOWNLOADED
 
     Column(
         Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp)
             .animateContentSize(),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f).alpha(if (hollow) HOLLOW_ALPHA else 1f)) {
                 Text(
                     episode.title,
                     style = MaterialTheme.typography.titleSmall,
@@ -255,11 +259,20 @@ private fun EpisodeRow(
                     )
                 }
             }
-            FilledTonalIconButton(onClick = onPlay) {
+            val playIcon = @Composable {
                 Icon(
                     if (showPause) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = if (showPause) "Pause" else "Play",
+                    contentDescription = when {
+                        showPause -> "Pause"
+                        hollow -> "Play (streams)"
+                        else -> "Play"
+                    },
                 )
+            }
+            if (hollow) {
+                OutlinedIconButton(onClick = onPlay) { playIcon() }
+            } else {
+                FilledTonalIconButton(onClick = onPlay) { playIcon() }
             }
             IconButton(onClick = onToggleQueue) {
                 Icon(
@@ -339,6 +352,9 @@ private fun StatusIcon(episode: Episode) {
     )
     Spacer(Modifier.width(4.dp))
 }
+
+/** Opacity of the title and details of an episode that isn't downloaded. */
+private const val HOLLOW_ALPHA = 0.6f
 
 private fun subtitle(episode: Episode, isCurrent: Boolean): String {
     val parts = mutableListOf<String>()
