@@ -1,0 +1,52 @@
+package dev.simplepod.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Podcasts
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import coil3.compose.SubcomposeAsyncImage
+import dev.simplepod.AppContainer
+import dev.simplepod.PodcastApp
+
+fun CreationExtras.container(): AppContainer = (this[APPLICATION_KEY] as PodcastApp).container
+
+/** Square cover art with a placeholder when there's no image or it fails to load. */
+@Composable
+fun Artwork(url: String?, modifier: Modifier = Modifier, corner: Dp = 8.dp) {
+    val shape = RoundedCornerShape(corner)
+    SubcomposeAsyncImage(
+        model = url,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = modifier.clip(shape),
+        loading = { Placeholder() },
+        error = { Placeholder() },
+    )
+}
+
+@Composable
+private fun Placeholder() {
+    Box(
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            Icons.Filled.Podcasts,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+    }
+}

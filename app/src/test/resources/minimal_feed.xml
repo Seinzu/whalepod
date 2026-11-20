@@ -1,0 +1,11 @@
+<rss version="2.0">
+  <channel>
+    <title>Minimal</title>
+    <image><url>https://example.com/only-rss.png</url></image>
+    <item>
+      <title>Only</title>
+      <enclosure url="http://example.com/only.mp3"/>
+      <pubDate>Sat, 1 Mar 2025 09:00:00 PST</pubDate>
+    </item>
+  </channel>
+</rss>
