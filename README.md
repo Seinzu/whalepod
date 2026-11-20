@@ -23,6 +23,11 @@ A small personal podcast app built with Kotlin, Jetpack Compose, Room, Media3 an
   - The queue appears under the controls. Tap an item to play it, or reorder and remove items.
   - It plays to the end and then moves on to the next queued episode automatically.
 - Plays in the background, with controls in the notification and on the lock screen. It pauses when headphones are unplugged.
+- **Back up and move**: in the ⋮ menu on the main screen.
+  - **Export subscriptions (OPML)** writes the standard subscription list that any podcast app can read.
+  - **Back up everything** writes a JSON file that also holds played status, resume positions and the queue.
+  - **Import OPML or backup** reads either kind of file. A backup restores straight from the file, so it doesn't need to fetch every feed first, and it merges with what's already on the phone without losing newer progress.
+  - Downloaded audio isn't part of the backup; episodes stream or can be downloaded again.
 
 ## Install the prebuilt APK
 Copy `app-debug.apk` to your phone and open it. You'll need to allow "Install unknown apps" for your file manager or browser. Or, with USB debugging turned on:
@@ -32,6 +37,11 @@ adb install -r app-debug.apk
 ```
 
 Requires Android 8.0 (API 26) or newer.
+
+## Download from GitHub Actions
+Every push runs the **Build APK** workflow (`.github/workflows/build.yml`), which runs the unit tests and builds a debug APK.
+- **Latest build:** open the Actions tab, pick a successful run, and download the `whalepod-debug-apk` artifact. It comes as a zip file containing `app-debug.apk`.
+- **Release:** push a tag starting with `v` (for example `git tag v1.0 && git push origin v1.0`). The workflow creates a GitHub Release for that tag and attaches the APK to it.
 
 ## Build it yourself
 Open this folder in Android Studio and press Run. Or, from the command line, with the Android SDK installed and `ANDROID_HOME` set:
@@ -56,6 +66,7 @@ Run the unit tests (RSS parsing, merging refreshed feeds, queue ordering):
 | `data/feed/PodcastSearch.kt` | Apple Podcasts search API client |
 | `data/PodcastRepository.kt` | Subscribe, refresh, unsubscribe, mark played (deletes the file) |
 | `data/EpisodeMerge.kt` | Merges a refreshed feed without overwriting your playback state |
+| `data/backup/` | OPML export/import and full JSON backup/restore |
 | `data/EpisodeDownloader.kt`, `work/DownloadWorker.kt` | Downloads (resumable, with a progress notification) |
 | `work/RefreshWorker.kt` | Background feed refresh every 4 hours |
 | `playback/PlaybackService.kt` | ExoPlayer + MediaSession: saves positions, marks episodes played, advances the queue |

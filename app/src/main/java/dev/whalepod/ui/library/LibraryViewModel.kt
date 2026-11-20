@@ -1,10 +1,13 @@
 package dev.whalepod.ui.library
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.whalepod.data.PodcastRepository
+import dev.whalepod.data.backup.BackupManager
+import dev.whalepod.data.backup.ImportResult
 import dev.whalepod.data.db.Podcast
 import dev.whalepod.data.feed.PodcastSearch
 import dev.whalepod.data.feed.SearchResult
@@ -30,6 +33,7 @@ data class AddPodcastState(
 class LibraryViewModel(
     private val repository: PodcastRepository,
     private val search: PodcastSearch,
+    private val backup: BackupManager,
 ) : ViewModel() {
 
     val podcasts: StateFlow<List<Podcast>?> = repository.observePodcasts()
@@ -43,6 +47,10 @@ class LibraryViewModel(
 
     private val _messages = MutableStateFlow<String?>(null)
     val messages: StateFlow<String?> = _messages.asStateFlow()
+
+    /** Non-null while an export/import is running; the text describes what's happening. */
+    private val _working = MutableStateFlow<String?>(null)
+    val working: StateFlow<String?> = _working.asStateFlow()
 
     private var searchJob: Job? = null
 
@@ -92,13 +100,57 @@ class LibraryViewModel(
         }
     }
 
+    fun exportOpml(uri: Uri) = runWork("Exporting subscriptions\u2026") {
+        val n = backup.exportOpml(uri)
+        "Exported $n ${plural(n, "podcast")} to OPML"
+    }
+
+    fun exportBackup(uri: Uri) = runWork("Backing up\u2026") {
+        val n = backup.exportBackup(uri)
+        "Backed up $n ${plural(n, "podcast")} with listening history"
+    }
+
+    fun import(uri: Uri) = runWork("Importing\u2026") {
+        when (val result = backup.import(uri)) {
+            is ImportResult.Opml -> buildList {
+                add("Added ${result.added} ${plural(result.added, "podcast")}")
+                if (result.alreadySubscribed > 0) add("${result.alreadySubscribed} already subscribed")
+                if (result.failed > 0) add("${result.failed} couldn't be fetched")
+            }.joinToString(", ")
+            is ImportResult.Backup -> {
+                // Pull in anything published since the backup was made, without holding up the UI.
+                if (result.newPodcastIds.isNotEmpty()) {
+                    viewModelScope.launch { result.newPodcastIds.forEach { runCatching { repository.refresh(it) } } }
+                }
+                "Restored ${result.podcasts} ${plural(result.podcasts, "podcast")} and " +
+                    "${result.episodesRestored} ${plural(result.episodesRestored, "episode")} of listening history"
+            }
+        }
+    }
+
+    private fun runWork(label: String, block: suspend () -> String) {
+        if (_working.value != null) return
+        viewModelScope.launch {
+            _working.value = label
+            _messages.value = try {
+                block()
+            } catch (e: Exception) {
+                e.message ?: "Something went wrong"
+            } finally {
+                _working.value = null
+            }
+        }
+    }
+
+    private fun plural(n: Int, word: String) = if (n == 1) word else word + "s"
+
     fun messageShown() {
         _messages.value = null
     }
 
     companion object {
         val Factory = viewModelFactory {
-            initializer { LibraryViewModel(container().repository, container().search) }
+            initializer { LibraryViewModel(container().repository, container().search, container().backup) }
         }
     }
 }

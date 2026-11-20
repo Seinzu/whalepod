@@ -7,6 +7,7 @@ import android.content.Context
 import dev.whalepod.data.EpisodeDownloader
 import dev.whalepod.data.PodcastRepository
 import dev.whalepod.data.QueueRepository
+import dev.whalepod.data.backup.BackupManager
 import dev.whalepod.data.db.AppDatabase
 import dev.whalepod.data.feed.PodcastSearch
 import dev.whalepod.playback.PlayerController
@@ -30,6 +31,7 @@ class AppContainer(context: Context) {
     val repository = PodcastRepository(db, http, downloader)
     val queue = QueueRepository(db)
     val search = PodcastSearch(http)
+    val backup = BackupManager(context, db, repository)
     val player = PlayerController(context, db, queue)
 }
 

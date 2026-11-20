@@ -1,5 +1,7 @@
 package dev.whalepod.ui.library
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -43,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.whalepod.data.db.Podcast
 import dev.whalepod.ui.Artwork
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +65,19 @@ fun LibraryScreen(
     val podcasts by vm.podcasts.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val message by vm.messages.collectAsStateWithLifecycle()
+    val working by vm.working.collectAsStateWithLifecycle()
     var showAdd by rememberSaveable { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
+
+    val exportOpml = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream"),
+    ) { uri -> uri?.let(vm::exportOpml) }
+    val exportBackup = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri -> uri?.let(vm::exportBackup) }
+    val importFile = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> uri?.let(vm::import) }
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(message) {
@@ -64,7 +88,55 @@ fun LibraryScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("whalepod") }) },
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = { Text("whalepod") },
+                    actions = {
+                        Box {
+                            IconButton(onClick = { menuOpen = true }) {
+                                Icon(Icons.Filled.MoreVert, contentDescription = "More")
+                            }
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                DropdownMenuItem(
+                                    text = { Text("Export subscriptions (OPML)") },
+                                    leadingIcon = { Icon(Icons.Filled.FileUpload, contentDescription = null) },
+                                    onClick = {
+                                        menuOpen = false
+                                        exportOpml.launch("podcasts.opml")
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Back up everything") },
+                                    leadingIcon = { Icon(Icons.Filled.Backup, contentDescription = null) },
+                                    onClick = {
+                                        menuOpen = false
+                                        exportBackup.launch("podcast-backup-${LocalDate.now()}.json")
+                                    },
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("Import OPML or backup") },
+                                    leadingIcon = { Icon(Icons.Filled.FileDownload, contentDescription = null) },
+                                    onClick = {
+                                        menuOpen = false
+                                        importFile.launch(arrayOf("*/*"))
+                                    },
+                                )
+                            }
+                        }
+                    },
+                )
+                working?.let { label ->
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    )
+                }
+            }
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAdd = true },
@@ -112,7 +184,8 @@ private fun EmptyLibrary() {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            "No podcasts yet.\nTap “Add podcast” to search for one or paste a feed URL.",
+            "No podcasts yet.\nTap “Add podcast” to search for one or paste a feed URL, " +
+                "or import a subscription list or backup from the ⋮ menu.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

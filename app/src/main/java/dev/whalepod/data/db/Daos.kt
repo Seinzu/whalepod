@@ -52,6 +52,9 @@ interface EpisodeDao {
     @Query("SELECT * FROM episodes WHERE id = :id")
     suspend fun get(id: Long): Episode?
 
+    @Query("SELECT * FROM episodes WHERE podcastId = :podcastId AND guid = :guid")
+    suspend fun getByGuid(podcastId: Long, guid: String): Episode?
+
     @Query("$WITH_PODCAST WHERE e.id = :id")
     suspend fun getWithPodcast(id: Long): EpisodeWithPodcast?
 
