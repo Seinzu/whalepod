@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A happy whale, drawn inside the adaptive-icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:pivotX="55"
+        android:pivotY="53"
+        android:scaleX="0.82"
+        android:scaleY="0.82"
+        android:translateX="-1"
+        android:translateY="2">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M22,62 C22,48 34,41 47,41 C60,41 66,49 70,55 C72,58 75,57 77,53 L79,49 C76,48 71,44 70,39 C74,39 78,42 80,45 C82,41 85,39 89,39 C88,45 84,49 81,52 C79,60 76,68 68,72 C60,77 50,78 40,77 C30,76 22,71 22,62 Z" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.0"
+            android:strokeLineCap="round"
+            android:pathData="M44,39 L44,31" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.0"
+            android:strokeLineCap="round"
+            android:pathData="M44,32 C41,26 35,26 33,30" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.0"
+            android:strokeLineCap="round"
+            android:pathData="M44,32 C47,26 53,26 55,30" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M31.5,34 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M53,34 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0 Z" />
+    </group>
+</vector>
