@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "SimplePod"
+rootProject.name = "whalepod"
 include(":app")

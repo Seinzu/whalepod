@@ -1,13 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A happy whale, drawn inside the adaptive-icon safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:translateX="30"
-        android:translateY="30">
+        android:pivotX="55"
+        android:pivotY="53"
+        android:scaleX="0.82"
+        android:scaleY="0.82"
+        android:translateX="-1"
+        android:translateY="2">
+        <path
+            android:fillColor="#7FD3F7"
+            android:pathData="M22,62 C22,48 34,41 47,41 C60,41 66,49 70,55 C72,58 75,57 77,53 L79,49 C76,48 71,44 70,39 C74,39 78,42 80,45 C82,41 85,39 89,39 C88,45 84,49 81,52 C79,60 76,68 68,72 C60,77 50,78 40,77 C30,76 22,71 22,62 Z" />
+        <path
+            android:fillColor="#E8F8FF"
+            android:pathData="M24,67 C31,75 45,77 58,74 C50,72 35,72 24,67 Z" />
+        <path
+            android:fillColor="#4FB3E3"
+            android:pathData="M47,65 C52,66 57,70 59,76 C53,76 48,72 47,65 Z" />
+        <path
+            android:fillColor="#FF8FA3"
+            android:pathData="M41,61 a2.8,2.8 0 1,0 5.6,0 a2.8,2.8 0 1,0 -5.6,0 Z" />
+        <path
+            android:strokeColor="#0B3954"
+            android:strokeWidth="2.4"
+            android:strokeLineCap="round"
+            android:pathData="M32,55 Q35.5,50.5 39,55" />
+        <path
+            android:strokeColor="#0B3954"
+            android:strokeWidth="2.4"
+            android:strokeLineCap="round"
+            android:pathData="M25,63 Q32,70 41,64.5" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.0"
+            android:strokeLineCap="round"
+            android:pathData="M44,39 L44,31" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.0"
+            android:strokeLineCap="round"
+            android:pathData="M44,32 C41,26 35,26 33,30" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.0"
+            android:strokeLineCap="round"
+            android:pathData="M44,32 C47,26 53,26 55,30" />
         <path
             android:fillColor="#FFFFFF"
-            android:pathData="M24,28c3.31,0 5.99,-2.69 5.99,-6L30,10c0,-3.32 -2.68,-6 -6,-6s-6,2.68 -6,6v12c0,3.31 2.69,6 6,6zM34.6,22c0,6 -5.07,10.2 -10.6,10.2S13.4,28 13.4,22H10c0,6.83 5.44,12.47 12,13.44V42h4v-6.56c6.56,-0.97 12,-6.61 12,-13.44h-3.4z" />
+            android:pathData="M31.5,34 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M53,34 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0 Z" />
     </group>
 </vector>

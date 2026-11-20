@@ -1,4 +1,4 @@
-# SimplePod — a simple Android podcast player
+# whalepod — a simple Android podcast player
 
 A small personal podcast app built with Kotlin, Jetpack Compose, Room, Media3 and WorkManager.
 
@@ -62,4 +62,4 @@ Run the unit tests (RSS parsing, merging refreshed feeds, queue ordering):
 | `playback/PlayerController.kt` | What the UI uses to control playback |
 | `ui/` | Compose screens: library, add-podcast sheet, podcast page, mini player, Now Playing |
 
-Downloaded audio is stored in the app's own storage (`Android/data/dev.simplepod/files/episodes`) and is removed if you uninstall the app.
+Downloaded audio is stored in the app's own storage (`Android/data/dev.whalepod/files/episodes`) and is removed if you uninstall the app.

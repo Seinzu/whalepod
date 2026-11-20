@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "dev.simplepod"
+    namespace = "dev.whalepod"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "dev.simplepod"
+        applicationId = "dev.whalepod"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
