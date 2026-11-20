@@ -33,6 +33,11 @@ adb install -r app-debug.apk
 
 Requires Android 8.0 (API 26) or newer.
 
+## Download from GitHub Actions
+Every push runs the **Build APK** workflow (`.github/workflows/build.yml`), which runs the unit tests and builds a debug APK.
+- **Latest build:** open the Actions tab, pick a successful run, and download the `whalepod-debug-apk` artifact. It comes as a zip file containing `app-debug.apk`.
+- **Release:** push a tag starting with `v` (for example `git tag v1.0 && git push origin v1.0`). The workflow creates a GitHub Release for that tag and attaches the APK to it.
+
 ## Build it yourself
 Open this folder in Android Studio and press Run. Or, from the command line, with the Android SDK installed and `ANDROID_HOME` set:
 
