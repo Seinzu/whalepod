@@ -7,6 +7,7 @@ import android.content.Context
 import dev.simplepod.data.EpisodeDownloader
 import dev.simplepod.data.PodcastRepository
 import dev.simplepod.data.QueueRepository
+import dev.simplepod.data.backup.BackupManager
 import dev.simplepod.data.db.AppDatabase
 import dev.simplepod.data.feed.PodcastSearch
 import dev.simplepod.playback.PlayerController
@@ -30,6 +31,7 @@ class AppContainer(context: Context) {
     val repository = PodcastRepository(db, http, downloader)
     val queue = QueueRepository(db)
     val search = PodcastSearch(http)
+    val backup = BackupManager(context, db, repository)
     val player = PlayerController(context, db, queue)
 }
 
