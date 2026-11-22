@@ -30,11 +30,58 @@ interface PodcastDao {
     @Update
     suspend fun update(podcast: Podcast)
 
+    @Query(
+        "UPDATE podcasts SET title = :title, author = :author, description = :description, " +
+            "imageUrl = :imageUrl, lastRefreshedAt = :refreshedAt WHERE id = :id",
+    )
+    suspend fun updateMetadata(
+        id: Long,
+        title: String,
+        author: String?,
+        description: String?,
+        imageUrl: String?,
+        refreshedAt: Long,
+    )
+
     @Query("UPDATE podcasts SET keepEpisodes = :keep WHERE id = :id")
     suspend fun setKeepEpisodes(id: Long, keep: Boolean)
 
     @Query("DELETE FROM podcasts WHERE id = :id")
     suspend fun delete(id: Long)
+}
+
+@Dao
+interface FeedDao {
+    @Query("SELECT * FROM feeds WHERE podcastId = :podcastId ORDER BY id")
+    fun observeForPodcast(podcastId: Long): Flow<List<Feed>>
+
+    @Query("SELECT * FROM feeds WHERE podcastId = :podcastId ORDER BY id")
+    suspend fun getForPodcast(podcastId: Long): List<Feed>
+
+    @Query("SELECT * FROM feeds ORDER BY podcastId, id")
+    suspend fun getAll(): List<Feed>
+
+    @Query("SELECT * FROM feeds WHERE id = :id")
+    suspend fun get(id: Long): Feed?
+
+    @Query("SELECT * FROM feeds WHERE url = :url")
+    suspend fun getByUrl(url: String): Feed?
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(feed: Feed): Long
+
+    @Update
+    suspend fun update(feed: Feed)
+
+    /** Makes [feedId] the only preferred feed of [podcastId]. */
+    @Query("UPDATE feeds SET preferred = (id = :feedId) WHERE podcastId = :podcastId")
+    suspend fun setPreferred(podcastId: Long, feedId: Long)
+
+    @Query("UPDATE feeds SET podcastId = :toPodcastId WHERE podcastId = :fromPodcastId")
+    suspend fun movePodcastFeeds(fromPodcastId: Long, toPodcastId: Long)
+
+    @Query("UPDATE feeds SET podcastId = :toPodcastId WHERE id = :feedId")
+    suspend fun moveFeed(feedId: Long, toPodcastId: Long)
 }
 
 private const val WITH_PODCAST =
@@ -43,8 +90,15 @@ private const val WITH_PODCAST =
 
 @Dao
 interface EpisodeDao {
-    @Query("SELECT * FROM episodes WHERE podcastId = :podcastId ORDER BY pubDate DESC, id DESC")
+    /** The visible episodes of a podcast: duplicates hidden in favour of the preferred feed's copy. */
+    @Query(
+        "SELECT * FROM episodes WHERE podcastId = :podcastId AND duplicateOfId IS NULL " +
+            "ORDER BY pubDate DESC, id DESC",
+    )
     fun observeForPodcast(podcastId: Long): Flow<List<Episode>>
+
+    @Query("SELECT * FROM episodes WHERE feedId = :feedId")
+    suspend fun getForFeed(feedId: Long): List<Episode>
 
     @Query("SELECT * FROM episodes WHERE podcastId = :podcastId")
     suspend fun getForPodcast(podcastId: Long): List<Episode>
@@ -52,8 +106,8 @@ interface EpisodeDao {
     @Query("SELECT * FROM episodes WHERE id = :id")
     suspend fun get(id: Long): Episode?
 
-    @Query("SELECT * FROM episodes WHERE podcastId = :podcastId AND guid = :guid")
-    suspend fun getByGuid(podcastId: Long, guid: String): Episode?
+    @Query("SELECT * FROM episodes WHERE feedId = :feedId AND guid = :guid")
+    suspend fun getByGuid(feedId: Long, guid: String): Episode?
 
     @Query("$WITH_PODCAST WHERE e.id = :id")
     suspend fun getWithPodcast(id: Long): EpisodeWithPodcast?
@@ -69,6 +123,21 @@ interface EpisodeDao {
 
     @Query("UPDATE episodes SET durationMs = :durationMs WHERE id = :id")
     suspend fun updateDuration(id: Long, durationMs: Long)
+
+    @Query(
+        "UPDATE episodes SET positionMs = :positionMs, played = :played, lastPlayedAt = :lastPlayedAt " +
+            "WHERE id = :id",
+    )
+    suspend fun setListeningState(id: Long, positionMs: Long, played: Boolean, lastPlayedAt: Long?)
+
+    @Query("UPDATE episodes SET duplicateOfId = :duplicateOfId WHERE id = :id")
+    suspend fun setDuplicateOf(id: Long, duplicateOfId: Long?)
+
+    @Query("UPDATE episodes SET podcastId = :toPodcastId WHERE podcastId = :fromPodcastId")
+    suspend fun movePodcastEpisodes(fromPodcastId: Long, toPodcastId: Long)
+
+    @Query("UPDATE episodes SET podcastId = :toPodcastId, duplicateOfId = NULL WHERE feedId = :feedId")
+    suspend fun moveFeedEpisodes(feedId: Long, toPodcastId: Long)
 
     @Query("UPDATE episodes SET played = :played, positionMs = :positionMs WHERE id = :id")
     suspend fun setPlayed(id: Long, played: Boolean, positionMs: Long)
@@ -109,6 +178,10 @@ interface QueueDao {
 
     @Query("DELETE FROM queue_items WHERE episodeId = :episodeId")
     suspend fun remove(episodeId: Long)
+
+    /** Points a queue entry at a different episode, keeping its place. No-op if [to] is already queued. */
+    @Query("UPDATE OR IGNORE queue_items SET episodeId = :to WHERE episodeId = :from")
+    suspend fun replaceEpisode(from: Long, to: Long)
 
     @Query("UPDATE queue_items SET sortOrder = :sortOrder WHERE episodeId = :episodeId")
     suspend fun setSortOrder(episodeId: Long, sortOrder: Int)

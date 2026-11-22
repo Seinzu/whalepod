@@ -9,6 +9,11 @@ A small personal podcast app built with Kotlin, Jetpack Compose, Room, Media3 an
   - Play/pause, add to or remove from the queue, download or re-download, delete a download, and mark played or unplayed.
   - A **"Keep episodes after playing"** switch for each podcast.
   - **Unsubscribe** in the ⋮ menu.
+- **Combined feeds**: some shows have a free feed and a paid or ad-free one. On the podcast page, ⋮ → **Add another feed** lets you paste the paid feed's URL, or pick a show you already subscribe to, and the feeds become one library entry.
+  - When an episode is in both feeds (same ID, or the same title within 7 days, ignoring markers like "(Ad-Free)"), only the copy from the **preferred** feed is shown. The added feed is preferred by default; change it in the **Feeds** section.
+  - Listening history, queue entries and downloads move to the copy that's shown.
+  - Episodes from the added feed are labelled with a short feed name, e.g. "Ad-Free".
+  - The ✂ button next to a feed splits it back into its own podcast, keeping its episodes and history.
 - **Downloads**:
   - Subscribing downloads the newest episode. After that, every new episode is downloaded automatically, on Wi-Fi only.
   - Feeds are checked every 4 hours, or whenever you pull down to refresh.
@@ -25,7 +30,7 @@ A small personal podcast app built with Kotlin, Jetpack Compose, Room, Media3 an
 - Plays in the background, with controls in the notification and on the lock screen. It pauses when headphones are unplugged.
 - **Back up and move**: in the ⋮ menu on the main screen.
   - **Export subscriptions (OPML)** writes the standard subscription list that any podcast app can read.
-  - **Back up everything** writes a JSON file that also holds played status, resume positions and the queue.
+  - **Back up everything** writes a JSON file that also holds played status, resume positions, the queue and combined feeds. Private feed URLs are included, so keep the file private.
   - **Import OPML or backup** reads either kind of file. A backup restores straight from the file, so it doesn't need to fetch every feed first, and it merges with what's already on the phone without losing newer progress.
   - Downloaded audio isn't part of the backup; episodes stream or can be downloaded again.
 
@@ -67,6 +72,7 @@ Run the unit tests (RSS parsing, merging refreshed feeds, queue ordering):
 | `data/PodcastRepository.kt` | Subscribe, refresh, unsubscribe, mark played (deletes the file) |
 | `data/EpisodeMerge.kt` | Merges a refreshed feed without overwriting your playback state |
 | `data/backup/` | OPML export/import and full JSON backup/restore |
+| `data/Duplicates.kt` | Matches the same episode across a podcast's feeds |
 | `data/EpisodeDownloader.kt`, `work/DownloadWorker.kt` | Downloads (resumable, with a progress notification) |
 | `work/RefreshWorker.kt` | Background feed refresh every 4 hours |
 | `playback/PlaybackService.kt` | ExoPlayer + MediaSession: saves positions, marks episodes played, advances the queue |

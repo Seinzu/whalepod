@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
+import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Delete
@@ -66,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.whalepod.data.db.DownloadState
 import dev.whalepod.data.db.Episode
+import dev.whalepod.data.db.Feed
 import dev.whalepod.data.db.Podcast
 import dev.whalepod.playback.NowPlaying
 import dev.whalepod.ui.Artwork
@@ -73,6 +75,7 @@ import dev.whalepod.ui.formatDate
 import dev.whalepod.ui.formatDuration
 import dev.whalepod.ui.formatTime
 import dev.whalepod.ui.htmlToText
+import dev.whalepod.ui.shortFeedLabel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,6 +92,17 @@ fun PodcastScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var confirmUnsubscribe by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
+    val feeds by vm.feeds.collectAsStateWithLifecycle()
+    val otherPodcasts by vm.otherPodcasts.collectAsStateWithLifecycle()
+    val addFeedState by vm.addFeed.collectAsStateWithLifecycle()
+    var showAddFeed by remember { mutableStateOf(false) }
+    var confirmSplit by remember { mutableStateOf<Feed?>(null) }
+    // In a combined podcast, episodes from added feeds are labelled with a short feed name.
+    val feedLabels = remember(feeds, podcast) {
+        val p = podcast
+        if (p == null || feeds.size < 2) emptyMap()
+        else feeds.filter { it.url != p.feedUrl }.associate { it.id to shortFeedLabel(it.title, p.title, it.url) }
+    }
 
     LaunchedEffect(message) {
         message?.let {
@@ -114,6 +128,15 @@ fun PodcastScreen(
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
+                                text = { Text("Add another feed") },
+                                leadingIcon = { Icon(Icons.Filled.AddLink, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    vm.resetAddFeed()
+                                    showAddFeed = true
+                                },
+                            )
+                            DropdownMenuItem(
                                 text = { Text("Unsubscribe") },
                                 leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
                                 onClick = {
@@ -137,6 +160,11 @@ fun PodcastScreen(
             if (p != null) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
                     item(key = "header") { Header(p, onKeepChange = vm::setKeepEpisodes) }
+                    if (feeds.size > 1) {
+                        item(key = "feeds") {
+                            FeedsSection(p, feeds, onSetPreferred = vm::setPreferredFeed, onSplit = { confirmSplit = it })
+                        }
+                    }
                     val list = episodes.orEmpty()
                     if (episodes != null && list.isEmpty()) {
                         item { Text("No episodes in this feed.", Modifier.padding(24.dp)) }
@@ -144,6 +172,7 @@ fun PodcastScreen(
                     items(list, key = { it.id }) { episode ->
                         EpisodeRow(
                             episode = episode,
+                            feedLabel = feedLabels[episode.feedId],
                             nowPlaying = nowPlaying,
                             queued = episode.id in queued,
                             onPlay = { vm.play(episode) },
@@ -156,6 +185,30 @@ fun PodcastScreen(
                     }
                 }
             }
+        }
+    }
+
+    if (showAddFeed) {
+        AddFeedSheet(
+            state = addFeedState,
+            otherPodcasts = otherPodcasts,
+            onAddUrl = { vm.addFeed(it) { showAddFeed = false } },
+            onMerge = { vm.mergeIn(it) { showAddFeed = false } },
+            onDismiss = { showAddFeed = false },
+        )
+    }
+
+    confirmSplit?.let { feed ->
+        podcast?.let { p ->
+            SplitFeedDialog(
+                feed = feed,
+                podcast = p,
+                onConfirm = {
+                    confirmSplit = null
+                    vm.splitFeed(feed)
+                },
+                onDismiss = { confirmSplit = null },
+            )
         }
     }
 
@@ -219,6 +272,7 @@ private fun Header(podcast: Podcast, onKeepChange: (Boolean) -> Unit) {
 @Composable
 private fun EpisodeRow(
     episode: Episode,
+    feedLabel: String?,
     nowPlaying: NowPlaying,
     queued: Boolean,
     onPlay: () -> Unit,
@@ -249,7 +303,7 @@ private fun EpisodeRow(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                     StatusIcon(episode)
                     Text(
-                        subtitle(episode, isCurrent),
+                        listOfNotNull(feedLabel, subtitle(episode, isCurrent)).joinToString(" \u00b7 "),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

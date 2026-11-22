@@ -23,3 +23,18 @@ fun formatDate(epochMs: Long): String? =
 
 fun htmlToText(html: String?): String =
     html?.let { HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_COMPACT).toString().trim() }.orEmpty()
+
+/**
+ * A short name for a feed within a combined podcast, e.g. "Ad-Free" for a feed titled
+ * "My Show (Ad-Free)" in the podcast "My Show". Falls back to the feed's title, then its host name.
+ */
+fun shortFeedLabel(feedTitle: String?, podcastTitle: String, url: String): String {
+    val host = runCatching { java.net.URI(url).host?.removePrefix("www.") }.getOrNull()
+    val title = feedTitle?.trim().orEmpty()
+    if (title.isEmpty() || title.equals(podcastTitle.trim(), ignoreCase = true)) return host ?: title.ifEmpty { url }
+    if (title.startsWith(podcastTitle.trim(), ignoreCase = true)) {
+        val rest = title.substring(podcastTitle.trim().length).trim { it.isWhitespace() || it in "()[]{}-–—:|·" }
+        if (rest.isNotEmpty()) return rest
+    }
+    return title
+}
