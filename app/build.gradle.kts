@@ -37,6 +37,10 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.all {
+            // List each test in the build output (and so in the CI log).
+            it.testLogging { events("passed", "skipped", "failed") }
+        }
     }
 }
 
