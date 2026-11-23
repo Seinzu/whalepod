@@ -33,6 +33,15 @@ class BackupTest {
     }
 
     @Test
+    fun readsVersion1FilesWithoutFeeds() {
+        val json = """{"format":"whalepod-backup","version":1,"podcasts":[{"feedUrl":"https://e/f","title":"T",
+            "episodes":[{"guid":"g","title":"E","audioUrl":"https://e/a.mp3","played":true}]}]}"""
+        val podcast = BackupJson.decode(json).podcasts.single()
+        assertEquals(emptyList<BackupFeed>(), podcast.feeds)
+        assertEquals(null, podcast.episodes.single().feedUrl)
+    }
+
+    @Test
     fun ignoresUnknownFieldsFromLaterVersionsOfTheSameFormat() {
         val json = """{"format":"whalepod-backup","version":1,"somethingNew":true,"podcasts":[]}"""
         assertEquals(emptyList<BackupPodcast>(), BackupJson.decode(json).podcasts)
@@ -41,11 +50,11 @@ class BackupTest {
     @Test
     fun rejectsOtherJson() {
         assertThrows(IOException::class.java) { BackupJson.decode("""{"hello":"world"}""") }
-        assertThrows(IOException::class.java) { BackupJson.decode("""{"format":"whalepod-backup","version":2}""") }
+        assertThrows(IOException::class.java) { BackupJson.decode("""{"format":"whalepod-backup","version":3}""") }
         assertThrows(IOException::class.java) { BackupJson.decode("{ not json") }
     }
 
-    private val stored = Episode(id = 1, podcastId = 1, guid = "a", title = "A", audioUrl = "https://x/a.mp3")
+    private val stored = Episode(id = 1, podcastId = 1, feedId = 1, guid = "a", title = "A", audioUrl = "https://x/a.mp3")
     private val fromBackup = BackupEpisode(guid = "a", title = "A", audioUrl = "https://x/a.mp3")
 
     @Test
@@ -74,8 +83,9 @@ class BackupTest {
 
     @Test
     fun convertsToAndFromEpisodes() {
-        val episode = fromBackup.copy(positionMs = 10, played = false, lastPlayedAt = 7, durationMs = 100).toEpisode(42)
+        val episode = fromBackup.copy(positionMs = 10, played = false, lastPlayedAt = 7, durationMs = 100).toEpisode(42, 9)
         assertEquals(42L, episode.podcastId)
+        assertEquals(9L, episode.feedId)
         assertEquals(10L, episode.positionMs)
         assertEquals(BackupEpisode.from(episode), fromBackup.copy(positionMs = 10, lastPlayedAt = 7, durationMs = 100))
     }

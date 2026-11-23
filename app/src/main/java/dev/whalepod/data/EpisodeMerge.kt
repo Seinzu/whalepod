@@ -6,13 +6,18 @@ import dev.whalepod.data.feed.ParsedEpisode
 data class EpisodeMergeResult(val toInsert: List<Episode>, val toUpdate: List<Episode>)
 
 /**
- * Merges freshly-parsed feed items into the episodes already stored for a podcast.
+ * Merges freshly-parsed feed items into the episodes already stored for one feed of a podcast.
  *
  * Feed metadata (title, description, date, URL, duration) is refreshed, but the user's own state —
  * play position, played flag, downloaded file, download state — is never touched. Stored episodes that
  * have disappeared from the feed are left alone so their record survives.
  */
-fun mergeEpisodes(podcastId: Long, existing: List<Episode>, parsed: List<ParsedEpisode>): EpisodeMergeResult {
+fun mergeEpisodes(
+    podcastId: Long,
+    feedId: Long,
+    existing: List<Episode>,
+    parsed: List<ParsedEpisode>,
+): EpisodeMergeResult {
     val byGuid = existing.associateBy { it.guid }
     val toInsert = mutableListOf<Episode>()
     val toUpdate = mutableListOf<Episode>()
@@ -21,6 +26,7 @@ fun mergeEpisodes(podcastId: Long, existing: List<Episode>, parsed: List<ParsedE
         if (current == null) {
             toInsert += Episode(
                 podcastId = podcastId,
+                feedId = feedId,
                 guid = item.guid,
                 title = item.title,
                 description = item.description,
