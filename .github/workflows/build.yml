@@ -35,6 +35,9 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Lint
+        run: ./gradlew lintDebug --stacktrace
+
       - name: Upload APK
         uses: actions/upload-artifact@v6
         with:
@@ -47,7 +50,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: test-reports
-          path: app/build/reports/tests/
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.html
 
       - name: Attach APK to release
         if: startsWith(github.ref, 'refs/tags/v')

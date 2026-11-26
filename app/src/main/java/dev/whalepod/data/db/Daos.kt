@@ -147,15 +147,33 @@ interface EpisodeDao {
 
     @Query(
         "UPDATE episodes SET downloadState = 'DOWNLOADED', downloadProgress = 100, " +
-            "localFilePath = :path WHERE id = :id",
+            "localFilePath = :path, downloadedAt = :now WHERE id = :id",
     )
-    suspend fun setDownloaded(id: Long, path: String)
+    suspend fun setDownloaded(id: Long, path: String, now: Long = System.currentTimeMillis())
 
     @Query(
         "UPDATE episodes SET downloadState = 'NONE', downloadProgress = 0, " +
-            "localFilePath = NULL WHERE id = :id",
+            "localFilePath = NULL, downloadedAt = NULL WHERE id = :id",
     )
     suspend fun clearDownload(id: Long)
+
+    /**
+     * Episodes on the phone or on their way: active and failed downloads first, then finished downloads,
+     * most recently downloaded first. Hidden duplicates are left out.
+     */
+    @Query(
+        "$WITH_PODCAST WHERE e.duplicateOfId IS NULL AND e.downloadState != 'NONE' " +
+            "ORDER BY CASE e.downloadState WHEN 'DOWNLOADING' THEN 0 WHEN 'QUEUED' THEN 1 " +
+            "WHEN 'FAILED' THEN 2 ELSE 3 END, COALESCE(e.downloadedAt, 0) DESC, e.pubDate DESC",
+    )
+    fun observeDownloads(): Flow<List<EpisodeWithPodcast>>
+
+    /** Started but unfinished episodes, most recently played first. Hidden duplicates are left out. */
+    @Query(
+        "$WITH_PODCAST WHERE e.duplicateOfId IS NULL AND e.played = 0 AND e.positionMs > 0 " +
+            "ORDER BY COALESCE(e.lastPlayedAt, 0) DESC, e.pubDate DESC",
+    )
+    fun observeInProgress(): Flow<List<EpisodeWithPodcast>>
 }
 
 @Dao

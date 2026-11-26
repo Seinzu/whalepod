@@ -56,9 +56,9 @@ class MigrationTest {
     }
 
     @Test
-    fun migratesVersion1KeepingAllData() = runBlocking {
+    fun migratesVersion1ToCurrentKeepingAllData() = runBlocking {
         val db = Room.databaseBuilder(context, AppDatabase::class.java, name)
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .allowMainThreadQueries()
             .build()
         try {
@@ -87,6 +87,13 @@ class MigrationTest {
             assertEquals(true, b1.played)
 
             assertEquals(listOf(11L, 20L), db.queueDao().episodeIds())
+
+            // Version 3: downloads made before the upgrade have no timestamp; new ones record it.
+            assertNull(episodesA[0].downloadedAt)
+            db.episodeDao().setDownloaded(11, "/files/11.mp3", now = 5555)
+            assertEquals(5555L, db.episodeDao().get(11)!!.downloadedAt)
+            db.episodeDao().clearDownload(11)
+            assertNull(db.episodeDao().get(11)!!.downloadedAt)
 
             // The new uniqueness rule is per feed: the same guid may now exist in two feeds of one podcast.
             val extra = db.feedDao().insert(Feed(podcastId = 1, url = "https://paid.example/feed"))
