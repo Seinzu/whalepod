@@ -37,3 +37,13 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_podcastId` ON `episodes` (`podcastId`)")
     }
 }
+
+/**
+ * Version 3 records when each download finished, for the Downloads view. Files downloaded before the
+ * upgrade have no timestamp and sort after newer downloads, by publication date.
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `episodes` ADD COLUMN `downloadedAt` INTEGER")
+    }
+}

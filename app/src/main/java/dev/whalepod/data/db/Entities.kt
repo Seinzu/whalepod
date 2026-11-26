@@ -93,6 +93,8 @@ data class Episode(
      * (e.g. the free copy of an ad-free episode). Duplicates are hidden from the episode list.
      */
     val duplicateOfId: Long? = null,
+    /** When the current download finished; null if not downloaded (or downloaded before version 3). */
+    val downloadedAt: Long? = null,
 )
 
 @Entity(

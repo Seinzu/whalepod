@@ -83,7 +83,7 @@ class BackupManager(
         val text = withContext(Dispatchers.IO) {
             resolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
                 ?: throw IOException("Couldn't open that file")
-        }.trimStart('﻿', ' ', '\t', '\r', '\n')
+        }.trimStart('\uFEFF', ' ', '\t', '\r', '\n')
         return if (text.startsWith("{")) restore(BackupJson.decode(text)) else importOpml(Opml.parse(text))
     }
 

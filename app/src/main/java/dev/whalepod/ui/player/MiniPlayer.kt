@@ -28,11 +28,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.whalepod.ui.Artwork
 
 @Composable
-fun MiniPlayer(onOpen: () -> Unit, vm: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)) {
+fun MiniPlayer(
+    onOpen: () -> Unit,
+    /** False when a navigation bar below the mini player already keeps clear of the system bar. */
+    padForSystemBar: Boolean = true,
+    vm: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory),
+) {
     val np by vm.nowPlaying.collectAsStateWithLifecycle()
     if (np.episodeId == null) return
     Surface(tonalElevation = 3.dp, shadowElevation = 8.dp) {
-        Column(Modifier.navigationBarsPadding()) {
+        Column(if (padForSystemBar) Modifier.navigationBarsPadding() else Modifier) {
             LinearProgressIndicator(
                 progress = { if (np.durationMs > 0) (np.positionMs.toFloat() / np.durationMs).coerceIn(0f, 1f) else 0f },
                 modifier = Modifier.fillMaxWidth(),

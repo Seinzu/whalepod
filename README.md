@@ -3,6 +3,10 @@
 A small personal podcast app built with Kotlin, Jetpack Compose, Room, Media3 and WorkManager.
 
 ## Features
+- **Navigation**: a bar at the bottom switches between **Library**, **In progress** and **Downloads**.
+- **In progress**: every episode you've started but not finished, across all podcasts, most recently played first, with time left and a progress bar.
+- **Downloads**: downloads under way, waiting or failed (with a retry option) at the top, then finished downloads, most recently downloaded first, with how much space they use.
+  - Tap an episode in either view to open its podcast, or use ▶ and ⋮ to play it, queue it, manage its download or mark it played.
 - **Library**: a grid of the podcasts you're subscribed to. Cover art and names come from each feed.
 - **Add podcast** (the button at the bottom right): search by name through the Apple Podcasts directory, or paste an RSS feed URL.
 - **Podcast page**: episodes newest first, each showing its date, length, download status and a resume bar.
@@ -78,5 +82,6 @@ Run the unit tests (RSS parsing, merging refreshed feeds, queue ordering):
 | `playback/PlaybackService.kt` | ExoPlayer + MediaSession: saves positions, marks episodes played, advances the queue |
 | `playback/PlayerController.kt` | What the UI uses to control playback |
 | `ui/` | Compose screens: library, add-podcast sheet, podcast page, mini player, Now Playing |
+| `ui/lists/` | The In progress and Downloads views |
 
 Downloaded audio is stored in the app's own storage (`Android/data/dev.whalepod/files/episodes`) and is removed if you uninstall the app.
